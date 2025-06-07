@@ -1,0 +1,35 @@
+[project]
+name = "django-oauth-toolkit-dcr"
+version = "0.1.0"
+description = "An extension to django oauth toolkit to support Dynamic Client Registration RFC7591"
+authors = [
+    {name = "Omar BENHAMID",email = "omar.benhamid@smart-gts.com"}
+]
+license = {text = "MIT"}
+readme = "README.md"
+homepage = "https://github.com/omarbenhamid/django-oauth-toolkit-dcr"
+repository = "https://github.com/omarbenhamid/django-oauth-toolkit-dcr"
+documentation = "https://github.com/omarbenhamid/django-oauth-toolkit-dcr"
+keywords = ["django", "oauth", "dynamic client registration", "rfc7591"]
+requires-python = ">=3.10"
+dependencies = [
+    "django (>=4.0)",
+    "django-oauth-toolkit (>=3.0.1,<4.0.0)",
+]
+classifiers = [
+    "Framework :: Django",
+    "Framework :: Django :: 4",
+    "Framework :: Django :: 5",
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+]
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[[tool.poetry.packages]]
+include = "oauth_dcr"
+[tool.poetry.group.dev.dependencies]
+pytest-django = "^4.11.1"
+
