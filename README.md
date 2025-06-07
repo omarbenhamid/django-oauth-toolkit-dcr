@@ -1,4 +1,3 @@
-
 # Django OAuth Toolkit DCR
 
 [![PyPI version](https://img.shields.io/pypi/v/django-oauth-toolkit-dcr)](https://pypi.org/project/django-oauth-toolkit-dcr/)
@@ -281,6 +280,14 @@ pytest
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
+
+Contributions are particularly welcome to implement:
+- **RFC 7592 Dynamic Client Registration Management Protocol** (client configuration endpoint, update/delete operations)
+- **Additional registration modes** (protected, authenticated, administrative registration beyond the current open mode)
+- **Enhanced security features** (rate limiting, audit logging, client attestation)
+- **OpenID Connect Dynamic Client Registration** support
+- **Security Measures** rate limiting 
+- ...
 
 1. Fork the repository
 2. Create your feature branch (`git checkout -b feature/amazing-feature`)
