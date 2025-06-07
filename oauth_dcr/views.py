@@ -10,7 +10,7 @@ from django.core.exceptions import ValidationError
 from django.conf import settings
 
 from oauth2_provider.models import Application
-from oauth2_provider import settings as oauth2_settings
+from oauth2_provider.settings import oauth2_settings
 
 logger = logging.getLogger(__name__)
 
@@ -132,7 +132,8 @@ class DynamicClientRegistrationView(View):
                             raise ValidationError(f"HTTPS required for redirect URIs in production: {uri}")
 
                     validated_uris.append(uri)
-                except Exception:
+                except Exception as e:
+                    logger.exception(f"Invalid redirect URI: {uri}")
                     raise ValidationError(f"Invalid redirect_uri: {uri}")
 
             processed["redirect_uris"] = " ".join(validated_uris)
