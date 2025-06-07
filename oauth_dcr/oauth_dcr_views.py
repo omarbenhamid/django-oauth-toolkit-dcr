@@ -17,10 +17,11 @@ logger = logging.getLogger(__name__)
 # Default settings for Dynamic Client Registration
 DCR_SETTINGS = getattr(settings, 'OAUTH_DCR_SETTINGS', {})
 
-# Default allowed grant types for open registration (only the safe ones)
+# Default allowed grant types for open registration (RFC 7591 safe defaults)
 DEFAULT_ALLOWED_GRANT_TYPES = [
     "authorization_code",
-    "implicit",
+    "implicit",  # Part of RFC 7591, though deprecated in OAuth 2.1
+    "refresh_token",  # Safe - used with other grant types for token renewal
 ]
 
 # Get allowed grant types from settings
@@ -37,13 +38,15 @@ class DynamicClientRegistrationView(View):
     Supports "open" mode - no authentication required for registration
     """
 
-    # Supported grant types mapping
+    # Supported grant types mapping (RFC 7591 compliant)
     GRANT_TYPE_MAPPING = {
         "authorization_code": Application.GRANT_AUTHORIZATION_CODE,
         "implicit": Application.GRANT_IMPLICIT,
         "password": Application.GRANT_PASSWORD,
         "client_credentials": Application.GRANT_CLIENT_CREDENTIALS,
-        "urn:ietf:params:oauth:grant-type:jwt-bearer": Application.GRANT_CLIENT_CREDENTIALS,  # JWT Bearer
+        "refresh_token": Application.GRANT_AUTHORIZATION_CODE,  # Refresh tokens work with auth code flow
+        "urn:ietf:params:oauth:grant-type:jwt-bearer": Application.GRANT_CLIENT_CREDENTIALS,
+        "urn:ietf:params:oauth:grant-type:saml2-bearer": Application.GRANT_CLIENT_CREDENTIALS,
     }
 
     # Supported response types mapping
@@ -245,6 +248,9 @@ class DynamicClientRegistrationView(View):
     def _get_grant_type_string(self, grant_type):
         """Convert internal grant type to RFC string"""
         reverse_mapping = {v: k for k, v in self.GRANT_TYPE_MAPPING.items()}
+        # Handle refresh_token special case since it maps to GRANT_AUTHORIZATION_CODE
+        if grant_type == Application.GRANT_AUTHORIZATION_CODE:
+            return "authorization_code"  # Default to authorization_code for auth code grant
         return reverse_mapping.get(grant_type, "authorization_code")
 
     def _get_response_types(self, grant_type):

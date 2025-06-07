@@ -158,11 +158,15 @@ The following client metadata parameters are supported:
 
 ## Supported Grant Types
 
-- `authorization_code` - Authorization Code Grant
-- `implicit` - Implicit Grant  
-- `password` - Resource Owner Password Credentials Grant
-- `client_credentials` - Client Credentials Grant
-- `urn:ietf:params:oauth:grant-type:jwt-bearer` - JWT Bearer Grant
+All RFC 7591 compliant grant types are supported:
+
+- `authorization_code` - Authorization Code Grant ✅ **(enabled by default)**
+- `implicit` - Implicit Grant ✅ **(enabled by default)**  
+- `refresh_token` - Refresh Token Grant ✅ **(enabled by default)**
+- `password` - Resource Owner Password Credentials Grant (⚠️ **disabled by default - security risk**)
+- `client_credentials` - Client Credentials Grant (⚠️ **disabled by default - security risk**)
+- `urn:ietf:params:oauth:grant-type:jwt-bearer` - JWT Bearer Grant (⚠️ **disabled by default - security risk**)
+- `urn:ietf:params:oauth:grant-type:saml2-bearer` - SAML 2.0 Bearer Grant (⚠️ **disabled by default - security risk**)
 
 ## Configuration
 
@@ -186,13 +190,15 @@ Configure DCR-specific settings for enhanced security:
 ```python
 # settings.py
 OAUTH_DCR_SETTINGS = {
-    # Grant types allowed for dynamic registration (security-focused defaults)
+    # Grant types allowed for dynamic registration (RFC 7591 safe defaults)
     'ALLOWED_GRANT_TYPES': [
         'authorization_code',  # Safe for open registration
-        # 'implicit',          # Deprecated in OAuth 2.1, uncomment if needed
+        'implicit',           # Part of RFC 7591 (deprecated in OAuth 2.1)
+        'refresh_token',      # Safe - used for token renewal
         # 'password',          # SECURITY RISK: Allows credential collection
         # 'client_credentials', # SECURITY RISK: Machine-to-machine access
-        # 'urn:ietf:params:oauth:grant-type:jwt-bearer',  # SECURITY RISK
+        # 'urn:ietf:params:oauth:grant-type:jwt-bearer',    # SECURITY RISK
+        # 'urn:ietf:params:oauth:grant-type:saml2-bearer',  # SECURITY RISK
     ],
     
     # Require HTTPS for redirect URIs in production (default: True in production)
@@ -207,8 +213,10 @@ OAUTH_DCR_SETTINGS = {
 | `password` | **HIGH** | Allows any client to collect user credentials |
 | `client_credentials` | **HIGH** | Enables machine-to-machine access without user consent |
 | `jwt-bearer` | **MEDIUM** | Can potentially bypass normal authentication flows |
-| `implicit` | **MEDIUM** | Deprecated due to token exposure in URL |
-| `authorization_code` | **LOW** | Secure with proper PKCE implementation |
+| `saml2-bearer` | **MEDIUM** | Can potentially bypass normal authentication flows |
+| `authorization_code` | **LOW** | Secure with proper PKCE implementation ✅ |
+| `implicit` | **MEDIUM** | Deprecated due to token exposure, but part of RFC 7591 ✅ |
+| `refresh_token` | **LOW** | Safe token renewal mechanism ✅ |
 
 ### Security Considerations
 
@@ -286,8 +294,7 @@ Contributions are particularly welcome to implement:
 - **Additional registration modes** (protected, authenticated, administrative registration beyond the current open mode)
 - **Enhanced security features** (rate limiting, audit logging, client attestation)
 - **OpenID Connect Dynamic Client Registration** support
-- **Security Measures** rate limiting 
-- ...
+- **Security Measures** rate limiting
 
 1. Fork the repository
 2. Create your feature branch (`git checkout -b feature/amazing-feature`)
