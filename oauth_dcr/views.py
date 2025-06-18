@@ -30,6 +30,14 @@ ALLOWED_GRANT_TYPES = DCR_SETTINGS.get('ALLOWED_GRANT_TYPES', DEFAULT_ALLOWED_GR
 # Whether to require HTTPS for redirect URIs in production
 REQUIRE_HTTPS_REDIRECT_URIS = DCR_SETTINGS.get('REQUIRE_HTTPS_REDIRECT_URIS', not settings.DEBUG)
 
+DEFAULT_ALLOWED_TOKEN_ENDPOINT_AUTH_METHODS = [
+    "none",
+    "client_secret_basic",
+    "client_secret_post",
+]
+
+ALLOWED_TOKEN_ENDPOINT_AUTH_METHODS = DCR_SETTINGS.get('ALLOWED_TOKEN_ENDPOINT_AUTH_METHODS', DEFAULT_ALLOWED_TOKEN_ENDPOINT_AUTH_METHODS)
+
 
 @method_decorator(csrf_exempt, name='dispatch')
 class DynamicClientRegistrationView(View):
@@ -86,7 +94,7 @@ class DynamicClientRegistrationView(View):
                                             "Failed to register client", 500)
 
             # Return client information response
-            return self._success_response(application)
+            return self._success_response(application, processed_metadata["token_endpoint_auth_method"])
 
         except Exception as e:
             logger.exception(f"Unexpected error in client registration: {e}")
@@ -180,7 +188,9 @@ class DynamicClientRegistrationView(View):
             processed["client_type"] = Application.CLIENT_CONFIDENTIAL
 
         # Token endpoint auth method
-        token_endpoint_auth_method = metadata.get("token_endpoint_auth_method", "client_secret_basic")
+        token_endpoint_auth_method = processed["token_endpoint_auth_method"] = metadata.get("token_endpoint_auth_method", "client_secret_basic")
+        if token_endpoint_auth_method not in ALLOWED_TOKEN_ENDPOINT_AUTH_METHODS:
+            raise ValidationError(f"Unsupported token_endpoint_auth_method: {token_endpoint_auth_method}")
         if token_endpoint_auth_method == "none":
             processed["client_type"] = Application.CLIENT_PUBLIC
 
@@ -228,7 +238,7 @@ class DynamicClientRegistrationView(View):
 
         return application
 
-    def _success_response(self, application):
+    def _success_response(self, application, token_endpoint_auth_method):
         """Generate successful registration response"""
         response_data = {
             "client_id": application.client_id,
@@ -238,7 +248,7 @@ class DynamicClientRegistrationView(View):
             "redirect_uris": application.redirect_uris.split() if application.redirect_uris else [],
             "grant_types": [self._get_grant_type_string(application.authorization_grant_type)],
             "response_types": self._get_response_types(application.authorization_grant_type),
-            "token_endpoint_auth_method": "client_secret_basic" if application.client_type == Application.CLIENT_CONFIDENTIAL else "none",
+            "token_endpoint_auth_method": token_endpoint_auth_method,
         }
 
         # Remove None values
